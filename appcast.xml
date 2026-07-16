@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Wattcher Updates</title>
+    <link>https://github.com/codingstark-dev/Wattcher</link>
+    <description>Signed macOS updates for Wattcher.</description>
+    <language>en</language>
+  </channel>
+</rss>

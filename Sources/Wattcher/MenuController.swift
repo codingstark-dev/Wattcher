@@ -10,10 +10,7 @@ final class MenuController: NSObject {
     init(actions: MenuActions) {
         self.actions = actions
         super.init()
-        statusItem.button?.image = NSImage(
-            systemSymbolName: "bolt.circle",
-            accessibilityDescription: "Wattcher"
-        )
+        statusItem.button?.image = BrandAssets.statusIcon
         statusItem.button?.toolTip = "Wattcher"
         rebuildMenu()
     }
@@ -26,11 +23,22 @@ final class MenuController: NSObject {
     private func rebuildMenu() {
         let menu = NSMenu()
         menu.autoenablesItems = false
-        menu.addItem(label("Wattcher", bold: true))
+        let titleItem = label("Wattcher", bold: true)
+        titleItem.image = BrandAssets.applicationIcon
+        titleItem.image?.size = NSSize(width: 18, height: 18)
+        menu.addItem(titleItem)
         menu.addItem(label(statusText))
         menu.addItem(label(batteryText))
         menu.addItem(label(scheduleText))
         menu.addItem(.separator())
+        let overviewItem = NSMenuItem(
+            title: "Open Overview…",
+            action: #selector(openOverview),
+            keyEquivalent: ""
+        )
+        overviewItem.target = self
+        overviewItem.image = NSImage(systemSymbolName: "list.bullet.rectangle", accessibilityDescription: nil)
+        menu.addItem(overviewItem)
         menu.addItem(listenersMenu())
         menu.addItem(activityMenu())
 
@@ -90,6 +98,24 @@ final class MenuController: NSObject {
         }
 
         menu.addItem(.separator())
+        let updateMode = state.automaticallyChecksForUpdates
+            ? (state.automaticallyDownloadsUpdates ? "Automatic updates: On" : "Automatic update checks: On")
+            : "Automatic updates: Off"
+        menu.addItem(label(updateMode))
+        let updateItem = NSMenuItem(
+            title: "Check for Updates…",
+            action: #selector(checkForUpdates),
+            keyEquivalent: ""
+        )
+        updateItem.target = self
+        menu.addItem(updateItem)
+        let settingsItem = NSMenuItem(
+            title: "Settings…",
+            action: #selector(openSettings),
+            keyEquivalent: ","
+        )
+        settingsItem.target = self
+        menu.addItem(settingsItem)
         let quitItem = NSMenuItem(title: "Quit Wattcher", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
@@ -208,6 +234,9 @@ final class MenuController: NSObject {
     }
 
     @objc private func checkNow() { actions.checkNow() }
+    @objc private func openOverview() { actions.openOverview() }
+    @objc private func openSettings() { actions.openSettings() }
+    @objc private func checkForUpdates() { actions.checkForUpdates() }
 
     @objc private func selectInterval(_ sender: NSMenuItem) {
         guard let rawValue = sender.representedObject as? Int,

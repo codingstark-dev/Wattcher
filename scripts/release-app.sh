@@ -9,9 +9,7 @@ ARCHIVE="$ROOT/.build/Wattcher.zip"
 
 "$ROOT/scripts/build-app.sh" >/dev/null
 
-codesign --force --options runtime --timestamp --sign "$IDENTITY" \
-  "$APP/Contents/MacOS/Wattcher"
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+codesign --force --deep --options runtime --timestamp --sign "$IDENTITY" "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
 rm -f "$ARCHIVE"

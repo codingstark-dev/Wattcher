@@ -11,7 +11,9 @@ Wattcher does not claim to measure true per-process wattage. macOS does not expo
 - Reads battery percentage and power source with `pmset`.
 - Enumerates current-user processes with `ps`, then reads canonical path, start time, cumulative CPU, resident memory, and wakeups with public `libproc` APIs.
 - Maps listening TCP ports to their owning processes with machine-readable `lsof` output.
-- Shows a compact listening-owner submenu with endpoints, CPU, RAM, origin, path, and safe keep/ignore/quit actions.
+- Shows a searchable overview with development-only or all-listener filtering, endpoints, CPU, RAM, estimated impact, origin, and path.
+- Opens local ports in the browser; copies endpoints; opens Terminal at the executable directory; and reveals executables in Finder.
+- Supports safe per-process review and confirmed bulk quit with identity revalidation before every signal.
 - Classifies foreground apps, LaunchAgents, LaunchDaemons, user processes, and system processes.
 - Warms a baseline before alerting and requires two consecutive high samples for CPU or memory findings.
 - Flags a newly exposed non-loopback listening port after warm-up.
@@ -20,6 +22,7 @@ Wattcher does not claim to measure true per-process wattage. macOS does not expo
 - Revalidates PID, user, canonical executable path, and process start time immediately before termination.
 - Refuses to terminate system, other-user, self, PID 0/1, and other protected processes.
 - Keeps all process and port telemetry on the Mac. Up to 50 notification-review records persist locally for at most 24 hours; there is no AI or cloud dependency.
+- Includes signed in-app updates with automatic check/download controls powered by Sparkle.
 
 ## Build and run
 
@@ -32,6 +35,22 @@ open .build/Wattcher.app
 ```
 
 The release bundle is ad-hoc signed for local development. For a notarized distribution build, set `WATTCHER_SIGNING_IDENTITY` and `WATTCHER_NOTARY_PROFILE`, then run `./scripts/release-app.sh`. For normal launch-at-login behavior, copy the signed app to `/Applications`.
+
+## Publishing updates
+
+Wattcher uses a signed Sparkle appcast. Increment `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist`, then prepare a notarized update:
+
+```bash
+WATTCHER_SIGNING_IDENTITY="Developer ID Application: …" \
+WATTCHER_NOTARY_PROFILE="notary-profile" \
+./scripts/prepare-update.sh
+```
+
+Create a GitHub release whose tag is `v<version>`, upload the printed `Wattcher-<version>.zip`, then commit and publish the updated `appcast.xml`. Existing installs check that HTTPS feed automatically and verify every archive with the private Sparkle key stored in the maintainer's Keychain. Never commit or upload the private key.
+
+## Project
+
+Wattcher is open-source software by [codingstark-dev](https://github.com/codingstark-dev).
 
 The executable also exposes a diagnostic surface:
 

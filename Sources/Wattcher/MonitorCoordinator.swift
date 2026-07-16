@@ -12,14 +12,22 @@ final class MonitorCoordinator {
     private let notifications = NotificationCoordinator()
     private let terminator = ProcessTerminator()
     private let reviewPresenter = ReviewPresenter()
+    private let preferences = AppPreferences()
+    private let updates = UpdateController()
+    private let hotKey = GlobalHotKeyController()
     private var scanGate = ScanGate()
     private var menuState = MenuViewState()
     private var findingsByID = [String: Finding]()
     private var processesByIdentity = [String: ProcessSample]()
+    private var overview: OverviewWindowController?
+    private var settings: SettingsWindowController?
 
     private lazy var menu = MenuController(
         actions: MenuActions(
+            openOverview: { [weak self] in self?.showOverview() },
+            openSettings: { [weak self] in self?.showSettings() },
             checkNow: { [weak self] in self?.requestScan() },
+            checkForUpdates: { [weak self] in self?.updates.checkForUpdates() },
             selectInterval: { [weak self] in self?.setInterval($0) },
             reviewFinding: { [weak self] in self?.reviewFinding(id: $0) },
             reviewPortOwner: { [weak self] in self?.reviewPortOwner(identity: $0) },
@@ -33,18 +41,23 @@ final class MonitorCoordinator {
         menuState.interval = store.interval
         menuState.launchAtLogin = SMAppService.mainApp.status == .enabled
         menuState.ignoredCount = store.ignoredCount
+        menuState.automaticallyChecksForUpdates = updates.automaticallyChecks
+        menuState.automaticallyDownloadsUpdates = updates.automaticallyDownloads
         menuState.findings = store.loadPendingFindings()
         findingsByID = Dictionary(uniqueKeysWithValues: menuState.findings.map { ($0.id, $0) })
         notifications.onReview = { [weak self] in self?.reviewFinding(id: $0) }
         notifications.onIgnore = { [weak self] in self?.requestIgnoreFinding(id: $0) }
         notifications.configure()
+        hotKey.onInvoke = { [weak self] in self?.showOverview() }
+        configureGlobalShortcut()
         scheduleNextAudit()
-        menu.render(menuState)
+        renderAll()
         requestScan()
     }
 
     func stop() {
         scheduler.stop()
+        hotKey.stop()
     }
 
     private func requestScan() {
@@ -55,7 +68,7 @@ final class MonitorCoordinator {
         guard scanGate.begin() else { return }
         menuState.isScanning = true
         menuState.errorMessage = nil
-        menu.render(menuState)
+        renderAll()
         defer {
             scanGate.end()
             menuState.isScanning = false
@@ -66,7 +79,7 @@ final class MonitorCoordinator {
                     TimeInterval(menuState.interval.rawValue)
                 )
             }
-            menu.render(menuState)
+            renderAll()
         }
         do {
             let snapshot = try await scanner.scan()
@@ -106,7 +119,7 @@ final class MonitorCoordinator {
         store.interval = interval
         menuState.interval = interval
         scheduleNextAudit()
-        menu.render(menuState)
+        renderAll()
     }
 
     private func notifyNewFindings(_ findings: [Finding], at date: Date) {
@@ -181,14 +194,14 @@ final class MonitorCoordinator {
         }
         menuState.ignoredCount = store.ignoredCount
         for id in removedIDs { notifications.remove(id: id) }
-        menu.render(menuState)
+        renderAll()
     }
 
     private func resetIgnoredProcesses() {
         guard reviewPresenter.confirmResetIgnoredProcesses() else { return }
         store.clearIgnoredIdentities()
         menuState.ignoredCount = 0
-        menu.render(menuState)
+        renderAll()
     }
 
     private func showFindingUnavailable(id: String) {
@@ -201,7 +214,7 @@ final class MonitorCoordinator {
         store.removePendingFinding(id: id)
         notifications.remove(id: id)
         menuState.findings.removeAll { $0.id == id }
-        menu.render(menuState)
+        renderAll()
     }
 
     private func toggleLaunchAtLogin() {
@@ -216,6 +229,73 @@ final class MonitorCoordinator {
         } catch {
             menuState.errorMessage = error.localizedDescription
         }
+        renderAll()
+    }
+
+    private func showOverview() {
+        if overview == nil {
+            let controller = OverviewWindowController(
+                actions: OverviewActions(
+                    refresh: { [weak self] in self?.requestScan() },
+                    review: { [weak self] in self?.reviewPortOwner(identity: $0) },
+                    quitVisible: { [weak self] in self?.quitVisibleProcesses(identities: $0) },
+                    openSettings: { [weak self] in self?.showSettings() }
+                ),
+                preferences: preferences
+            )
+            controller.onClose = { [weak self] in self?.overview = nil }
+            overview = controller
+        }
+        overview?.render(menuState)
+        overview?.show()
+    }
+
+    private func showSettings() {
+        if settings == nil {
+            let controller = SettingsWindowController(
+                actions: SettingsActions(
+                    setInterval: { [weak self] in self?.setInterval($0) },
+                    toggleLaunchAtLogin: { [weak self] in self?.toggleLaunchAtLogin() },
+                    shortcutChanged: { [weak self] in self?.configureGlobalShortcut() },
+                    updatesChanged: { [weak self] in self?.syncUpdateState() }
+                ),
+                preferences: preferences,
+                updates: updates
+            )
+            controller.onClose = { [weak self] in self?.settings = nil }
+            settings = controller
+        }
+        settings?.render(menuState)
+        settings?.show()
+    }
+
+    private func syncUpdateState() {
+        menuState.automaticallyChecksForUpdates = updates.automaticallyChecks
+        menuState.automaticallyDownloadsUpdates = updates.automaticallyDownloads
+        renderAll()
+    }
+
+    private func renderAll() {
         menu.render(menuState)
+        overview?.render(menuState)
+        settings?.render(menuState)
+    }
+
+    private func configureGlobalShortcut() {
+        menuState.shortcutStatus = hotKey.apply(
+            enabled: preferences.globalShortcutEnabled,
+            shortcut: preferences.globalShortcut
+        )
+        renderAll()
+    }
+
+    private func quitVisibleProcesses(identities: [String]) {
+        let processes = identities.compactMap { processesByIdentity[$0] }
+        guard !processes.isEmpty,
+              reviewPresenter.confirmQuitProcesses(processes)
+        else { return }
+        let results = processes.map { ($0, terminator.terminate($0)) }
+        reviewPresenter.showBulkTerminationResult(results)
+        requestScan()
     }
 }
