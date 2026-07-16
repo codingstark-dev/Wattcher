@@ -4,6 +4,10 @@ Wattcher is a native macOS menu-bar utility that periodically checks which proce
 
 Wattcher does not claim to measure true per-process wattage. macOS does not expose Activity Monitor's full energy-impact data through a public unprivileged API, so Wattcher labels CPU and memory anomalies as estimated battery impact.
 
+## Install
+
+Download the latest `.dmg` from [GitHub Releases](https://github.com/codingstark-dev/Wattcher/releases/latest), double-click it, then drag `Wattcher.app` onto the Applications shortcut. Eject the installer after the copy finishes.
+
 ## What it does
 
 - Runs an audit about every 10 minutes, 15 minutes, 20 minutes, 1 hour, 3 hours, or 8 hours.
@@ -35,6 +39,13 @@ open .build/Wattcher.app
 ```
 
 The release bundle is ad-hoc signed for local development. For a notarized distribution build, set `WATTCHER_SIGNING_IDENTITY` and `WATTCHER_NOTARY_PROFILE`, then run `./scripts/release-app.sh`. For normal launch-at-login behavior, copy the signed app to `/Applications`.
+
+Build a Finder installer image with Wattcher and an Applications shortcut:
+
+```bash
+./scripts/build-dmg.sh
+open .build/Wattcher-*.dmg
+```
 
 ## Publishing updates
 
@@ -97,4 +108,5 @@ Notification permission is requested on first launch. Launch at Login uses `SMAp
 - `Tests/WattcherCoreTests`: deterministic parser, policy, interval, and rules coverage.
 - `Resources/Info.plist`: agent-style application bundle metadata.
 - `scripts/build-app.sh`: release bundle assembly and ad-hoc signing.
+- `scripts/build-dmg.sh`: Finder disk image with an Applications shortcut.
 - `scripts/release-app.sh`: Developer ID signing, notarization, stapling, and Gatekeeper verification.

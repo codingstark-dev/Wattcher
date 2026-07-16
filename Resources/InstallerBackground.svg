@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="380" viewBox="0 0 640 380">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="640" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F4FF"/>
+      <stop offset="0.52" stop-color="#FDEFF7"/>
+      <stop offset="1" stop-color="#EFF4FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="254" y1="190" x2="386" y2="190" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7A64"/>
+      <stop offset="0.48" stop-color="#E75AA7"/>
+      <stop offset="1" stop-color="#8377FF"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-100%" width="160%" height="300%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <rect width="640" height="380" fill="url(#background)"/>
+  <circle cx="320" cy="190" r="74" fill="#E75AA7" fill-opacity="0.10"/>
+  <text x="320" y="72" fill="#21182D" fill-opacity="0.94" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="19" font-weight="600" text-anchor="middle">Drag Wattcher to Applications</text>
+  <path d="M254 190H374" stroke="#E75AA7" stroke-opacity="0.30" stroke-width="16" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M254 190H374M354 170L374 190L354 210" fill="none" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
