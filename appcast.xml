@@ -1,9 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Wattcher Updates</title>
-    <link>https://github.com/codingstark-dev/Wattcher</link>
-    <description>Signed macOS updates for Wattcher.</description>
-    <language>en</language>
-  </channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Wattcher Updates</title>
+        <link>https://github.com/codingstark-dev/Wattcher</link>
+        <description>Signed macOS updates for Wattcher.</description>
+        <language>en</language>
+        <item>
+            <title>0.1.0</title>
+            <pubDate>Thu, 16 Jul 2026 18:16:02 +0530</pubDate>
+            <link>https://github.com/codingstark-dev/Wattcher</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/codingstark-dev/Wattcher/releases/download/v0.1.0/Wattcher-0.1.0.zip" length="3605465" type="application/octet-stream" sparkle:edSignature="ef3Q4OmuRkElzlMI6cFbXa5IWC95FX3WinkmMTXBIBqgnw6+UwJDc6VPEqEXh32KMZue3p+UwWPD+c0gKrxcAQ=="/>
+        </item>
+    </channel>
 </rss>
