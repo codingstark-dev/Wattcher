@@ -10,6 +10,12 @@ STAGING="$WORK/root"
 READ_WRITE_IMAGE="$WORK/Wattcher-rw.dmg"
 VOLUME_NAME="Wattcher Installer"
 DEVICE=""
+MODE="${1:-}"
+
+if [[ $# -gt 1 ]]; then
+  print -u2 "Usage: $0 [--existing-app]"
+  exit 64
+fi
 
 cleanup() {
   if [[ -n "$DEVICE" ]]; then
@@ -18,12 +24,27 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"$ROOT/scripts/build-app.sh" >/dev/null
+case "$MODE" in
+  "")
+    "$ROOT/scripts/build-app.sh" >/dev/null
+    ;;
+  --existing-app)
+    if [[ ! -d "$APP" ]]; then
+      print -u2 "Expected an existing app bundle at $APP"
+      exit 1
+    fi
+    codesign --verify --deep --strict --verbose=2 "$APP"
+    ;;
+  *)
+    print -u2 "Usage: $0 [--existing-app]"
+    exit 64
+    ;;
+esac
 
 rm -rf "$WORK"
 rm -f "$DMG"
 mkdir -p "$STAGING"
-ditto "$APP" "$STAGING/Wattcher.app"
+ditto --norsrc --noextattr --noqtn --noacl "$APP" "$STAGING/Wattcher.app"
 ln -s /Applications "$STAGING/Applications"
 mkdir -p "$STAGING/.background"
 sips -s format png \
